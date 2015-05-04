@@ -12,12 +12,13 @@ import org.elasticsearch.common.inject.Inject;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.util.concurrent.EsExecutors;
-import org.elasticsearch.index.service.IndexService;
-import org.elasticsearch.index.shard.service.IndexShard;
+import org.elasticsearch.index.IndexService;
+import org.elasticsearch.index.shard.IndexShard;
 import org.elasticsearch.indices.IndicesService;
 import org.elasticsearch.indices.NodeIndicesStats;
 import org.elasticsearch.node.service.NodeService;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -125,10 +126,11 @@ public class GraphiteService extends AbstractLifecycleComponent<GraphiteService>
 
         private List<IndexShard> getIndexShards(IndicesService indicesService) {
             List<IndexShard> indexShards = Lists.newArrayList();
-            for (String indexName : indicesService.indices().keySet()) {
-                IndexService indexService = indicesService.indexServiceSafe(indexName);
-                for (int shardId : indexService.shardIds()) {
-                    indexShards.add(indexService.shard(shardId));
+            Iterator<IndexService> it = indicesService.iterator();
+            while(it.hasNext()) {
+                Iterator<IndexShard> itShard =  it.next().iterator();
+                while(itShard.hasNext()) {
+                    indexShards.add(itShard.next());
                 }
             }
             return indexShards;
